@@ -1,13 +1,19 @@
 <template>
     <div class="recommend">
         <div class="recommend-content">
-            <div class="slider-wrapper">
-                
+            <div class="slider-wrapper" v-if="recommendList.length">
+                <slider>
+                    <div v-for="item in recommendList" :key='item.id'>
+                    <a :href="item.linkUrl">
+                        <img :src="item.picUrl" alt="">
+                    </a>
+                </div>
+                </slider>
             </div>
             <div class="recommend-list">
                 <h1 class="list-title">热门歌单推荐</h1>
                 <ul>
-
+                    
                 </ul>
             </div>
         </div>
@@ -17,9 +23,12 @@
 <script>
 import {getTopList} from "api/recommend.js";
 import { CodeOk } from "api/config.js";
+import slider from "base/slider/slider";
 export default {
     data(){
-        
+        return {
+            recommendList: []
+        }
     },
     created(){
         this.getRecommend()
@@ -28,17 +37,20 @@ export default {
         getRecommend(){
             getTopList().then((res)=>{
                 if (res.code === CodeOk) {
-                    console.log(res.data);
+                    this.recommendList = res.data.slider
                 }
             })
         }
-    }
+    },
+    components: {
+        slider
+    },
 }
 </script>
 
 <style lang="stylus" scoped>
 
-recommend
+.recommend
     position: fixed
     width: 100%
     top: 88px

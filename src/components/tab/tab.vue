@@ -27,6 +27,11 @@ export default {
 .tab
     display flex 
     justify-content space-around
+    height 44px
+    line-height 44px
+    .tab-item
+        .tab-link
+            padding-bottom 3px
     .router-link-active
         .tab-link
             color $color-theme
