@@ -34,14 +34,16 @@ export default {
         }
     },
     mounted(){
-        this.init()
-        this.scrollInit()
-        if(this.autoPlay){
-           this.autoP() 
-        }
-        
-        window.addEventListener('resize',()=>{
-            this.init(true)
+        this.$nextTick(()=>{
+            this.init()
+            this.scrollInit()
+            if(this.autoPlay){
+                this.autoP() 
+            }
+            
+            window.addEventListener('resize',()=>{
+                this.init(true)
+            })
         })
     },
     activated(){
@@ -83,6 +85,7 @@ export default {
             this.$refs.sliderGroup.style.width =width +'px';
         },
         scrollInit(){
+            //初始化scroll
             this.slider = new BScroll(this.$refs.slider,{
                 scrollX: true,
                 scrollY: false,
@@ -101,6 +104,7 @@ export default {
                     this.autoP()
                 }
             })
+            //滑动前清理定时器
             this.slider.on('beforeScrollStart',()=>{
                 if (this.timer) {
                     clearTimeout(this.timer)
