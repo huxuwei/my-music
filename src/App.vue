@@ -1,11 +1,11 @@
 <template>
-  <div id="app">
+  <div id="app" @click.prevent="fn">
     <m-header></m-header>
     <tab></tab>
     <keep-alive>
       <router-view></router-view>
     </keep-alive>
-    
+    <player></player>
   </div>
 </template>
 
@@ -19,6 +19,9 @@ export default {
     MHeader,
     Tab,
     Player
+  },
+  methods:{
+    fn(){}
   }
 }
 </script>

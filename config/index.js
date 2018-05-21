@@ -13,11 +13,13 @@ module.exports = {
     proxyTable: {
       '/api': {
         target: 'http://ustbhuangyi.com/music',
+        host:'ustbhuangyi.com',
+        referer: 'https://c.y.qq.com/music/',
         secure: false,
         changeOrigin: true,
         pathRewrite: {
           '^/api': ''
-        }
+        },
       }
     },
 

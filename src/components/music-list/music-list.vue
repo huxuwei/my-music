@@ -10,67 +10,92 @@
         <div class="bg-layer" ref="layer"></div>
         <scroll :data='song' class="list" ref="list" 
         @scroll="getPos" :probeType='3'>
-            <div>
-                <song-list :songs='song' v-if='song.length'></song-list>
+            <div class="song-list-wrapper">
+                <song-list :songs='song' v-if='song.length'
+                @playing='play'></song-list>
+                <loading v-if='!song.length'></loading>
             </div>
         </scroll>
+        
     </div>
 </template>
 
 <script>
 import songList from "base/song-list/song-list";
 import { getSongList } from "api/recommend.js";
+import { getSongPlay,filter } from "api/song.js";
 import scroll from "base/scroll/scroll";
-
+import { mapMutations,mapActions,mapState } from "vuex";
+import { creatSong } from "common/js/song.js";
+import loading from "base/loading/loading";
 const MAXTOP = 40;
 export default {
     mounted(){
-        // this.$nextTick(()=>{
+        this.$nextTick(()=>{
+             this.getSongs();
+            this.setTop();
+            // this.get();
+            //layer 偏移Y向上的最小值
+            this.minTranslateY =  -this.bgHeight + MAXTOP;
+            // console.log(this.songListInfo);
             
-        // })
-        this.getSongs();
-        this.setTop();
-        //layer 偏移Y向上的最小值
-        this.minTranslateY =  -this.bgHeight + MAXTOP;
+             this.$refs.bg.style.backgroundImage=`url(${this.songListInfo.imgurl})`
+        })
+       
     },
     props:{
-        // title:{
-        //     type: String,
-        //     default: 'title'
-        // },
         bgImg:{
-            type: String
+            type: String,
+            
         },
-        // song:{
-        //     type: Array,
-        //     default: []
-        // }
     },
     data(){
         return {
             song:[],
-            title:'',
+            title1:'',
             scrollY:0
         }
     },
+    computed:{
+        title(){
+            return this.songListInfo.dissname || this.title1
+        },
+        ...mapState([
+            'songListInfo'
+        ])
+    },
     components:{
         songList,
-        scroll
+        scroll,
+        loading,
     },
     methods:{
         //根据id获取歌单的详情
-        getSongs(){
+        async getSongs(){
             let dissid = this.$route.params.id
-            getSongList(dissid).then(res=>{
-                let {dissname,songlist,logo} = res.cdlist[0]
-                // console.log(res.cdlist[0]);
-                
-                this.title = dissname
-                this.song =songlist
-                this.$refs.bg.style.backgroundImage=`url(${logo})`
-                // console.log(this.song);
-                
-            })
+            let data1 =await  getSongList(dissid)
+            let {dissname,songlist,logo,songids} = data1.cdlist[0];
+            //如果手动刷新，就重新设置标题和背景
+            if (!this.songListInfo.dissname) {
+                this.title1 = dissname;
+                this.$refs.bg.style.backgroundImage=`url(${logo})`;
+            }
+            
+            // let obj = filter(songlist)
+            let data2 =await getSongPlay(songlist)
+            let songUrlList= data2.urlMid.data.midurlinfo
+            
+            // this.song =songlist
+           
+
+            //创建song实例
+            songlist.forEach((item,index) => {
+                if (!songUrlList[index].purl) {
+                    return
+                }
+                this.song.push(creatSong(item,songUrlList[index]))
+            });
+           
         },
         back(){
             this.$router.push('/recommend')
@@ -85,26 +110,35 @@ export default {
             // console.log(pos);
             // this.$refs.layer.style['transform'] =`translateY(${pos.y}px)` 
             this.scrollY = pos.y
-            
-        }
+        },
+        //播放
+        play(item,index){
+            this.setPlay({
+                list: this.song,
+                index,
+            })
+        },
+        ...mapActions([
+            'setPlay'
+        ]),
     },
     watch: {
         scrollY(newY){
-            // let a =this.scrollY;
-            // console.log(this.minTranslateY);
-            let scale = newY / this.bgHeight;
+
             if (newY > this.minTranslateY) {
                 this.$refs.layer.style['transform'] = `translate3d(0,${newY}px,0)`
                 this.$refs.bg.style['zIndex'] = '0'
                 this.$refs.bg.style['paddingTop']='70%'
                 this.$refs.bg.style['height'] =`0`
             }else{
+                 //向上且到达最高点时，图片高度 为10 ，并去掉宽高比
                 this.$refs.bg.style['zIndex'] = '10'
                 this.$refs.bg.style['paddingTop']='0'
                 this.$refs.bg.style['height'] =`${MAXTOP}px`
             }
-            
+           //向下时放大图片
             if (newY > 0 ) {
+                 let scale = newY / this.bgHeight;
                 scale = 1 + scale
                 this.$refs.bg.style['transform'] = `scale(${scale})`
                 this.$refs.bg.style['zIndex'] = '10'

@@ -1,29 +1,40 @@
 <template>
     <div class="song-list">
         <ul v-if="songs.length">
-            <li v-for="item in songs" :key='item.songid' class="item">
+            <li v-for="(item,index) in songs" :key='item.songid' 
+            class="item" @click="play(item,index)">
                 <div class="content">
-                    <h2 class="name">{{item.songname}}</h2>
+                    <h2 class="name">{{item.name}}</h2>
                     <p class="desc">{{getDesc(item)}}</p>
                 </div>
-                
             </li>
+            <loading v-show="!songs.length"></loading>
         </ul>
     </div>
 </template>
 
 <script>
+import {  mapMutations} from "vuex";
+import loading from "base/loading/loading";
 export default {
   mounted() {},
   props: {
     songs: {
-      type: Array
+      type: Array,
+      default:[]
     }
   },
   methods: {
     getDesc(item) {
-      return `${item.singer[0].name}.${item.songname}`;
-    }
+      return `${item.singer}.${item.album}`;
+    },
+    play(item,index){
+        this.$emit('playing',item,index)
+    },
+    
+  },
+  components:{
+      loading
   }
 };
 </script>

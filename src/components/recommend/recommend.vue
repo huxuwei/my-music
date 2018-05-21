@@ -1,6 +1,7 @@
 <template>
     <div class="recommend">
-        <scroll class="recommend-content" :data='SongList' ref="scroll">
+        <scroll class="recommend-content" :data='SongList' ref="scroll"
+        :scrollX='true'>
           <div>
             <div class="slider-wrapper" v-if="recommendList.length">
                 <slider>
@@ -20,8 +21,8 @@
                             <img width="60" height="60" v-lazy="item.imgurl" alt="">
                         </div>
                         <div class="text">
-                            <h2 class="name">{{item.creator.name}}</h2>
-                            <p class="desc">{{item.dissname}}</p>
+                            <h2 class="name">{{item.dissname}}</h2>
+                            <p class="desc">{{item.creator.name}}</p>
                         </div>
                     </li>
                 </ul>
@@ -41,7 +42,7 @@ import { CodeOk } from "api/config.js";
 import slider from "base/slider/slider";
 import scroll from "base/scroll/scroll";
 import loading from "base/loading/loading";
-
+import { mapMutations } from "vuex";
 export default {
   data() {
     return {
@@ -54,9 +55,9 @@ export default {
     this.getRecommend(), this.getSongList();
   },
   methods: {
-    // ...mapMutations([
-    //     'showSongList'
-    // ]),
+    ...mapMutations({
+        setSongListInfo: 'set_songListInfo'
+    }),
     //获取轮播图数据
     getRecommend() {
       getTopList().then(res => {
@@ -69,8 +70,6 @@ export default {
     getSongList() {
       getList().then(res => {
         if (res.code === CodeOk) {
-        //   console.log(res);
-
           this.SongList = res.data.list;
         }
       });
@@ -86,7 +85,8 @@ export default {
         this.$router.push({
             path: `/recommend/${item.dissid}`
         })
-        // this.showSongList()
+        this.setSongListInfo(item)
+        
     },
     
   },

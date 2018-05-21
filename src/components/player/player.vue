@@ -1,19 +1,248 @@
 <template>
-  <div class="player">
-      <div class="normal-player">
+  <div class="player" v-show="playList.length">
+      <div class="normal-player" v-show="!isMini">
           <div class="background">
-              <img src="" alt="">
+              <img :src="playSong.image" alt="">
+          </div>
+          <div class="top">
+             <div class="back" @click="back">
+              <i class="icon-back"></i>
+            </div>
+            <h1 class="title" v-html="playSong.name"></h1>
+            <h2 class="subtitle" v-html="playSong.singer"></h2>
+          </div>
+          <div class="middle">
+            <div class="middle-l">
+              <div class="cd-wrapper">
+                <div class="cd">
+                  <img :src="playSong.image" alt="" class="image" @click="changeCurrentTime(50)">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bottom">
+            <div class="progress-wrapper">
+              
+                <span class="time time-l">{{format(currentTime)}}</span>
+                <div class="progress-bar-wrapper">
+                  <progress-bar :percentage='percentage'
+                  @change='changeCurrentTime'></progress-bar>
+                </div>
+                <span class="time time-r">{{format(time)}}</span>
+            </div>
+            
+            <div class="operators">
+              <div class="icon i-left" >
+                <i :class="iconMode" @click="changeMode"></i>
+              </div>
+              <div class="icon i-left" >
+                <i @click="prev" class="icon-prev"></i>
+              </div>
+              <div class="icon i-center" >
+                <i @click="togglePlaying" :class="playIcon"></i>
+              </div>
+              <div class="icon i-right" >
+                <i @click="next" class="icon-next"></i>
+              </div>
+              <!-- <div class="icon i-right">
+                <i @click="toggleFavorite(currentSong)" class="icon" :class="getFavoriteIcon(currentSong)"></i>
+              </div> -->
+            </div>
           </div>
       </div>
-      <div class="mini-player">
-
+      <div class="mini-player" v-show="isMini" @click="showNormal">
+          <div class="icon">
+            <img  width="40" height="40" :src="playSong.image">
+          </div>
+          <div class="text">
+            <h2 class="name" v-html="playSong.name"></h2>
+            <p class="desc" v-html="playSong.singer"></p>
+          </div>
+          <div class="control">
+            <!-- <progress-circle :radius="radius" :percent="percent"> -->
+              <i @click.stop="togglePlaying" class="icon-mini" :class="miniIcon"></i>
+            <!-- </progress-circle> -->
+          </div>
+          <div class="control" @click.stop="showPlaylist">
+            <i class="icon-playlist"></i>
+          </div>
       </div>
+      <audio :src="playSong.url" autoplay ref="audio"
+      @canplay='loaded' @timeupdate="updateTime"   @ended='next' ></audio>
   </div>
 </template>
 
 <script>
+import { mapGetters,mapState, mapMutations } from "vuex";
+import { playMode } from "common/js/config.js";
+import { random } from "common/js/util.js";
+import  progressBar  from "base/progress-bar/progress-bar";
 export default {
-
+    data(){
+      return {
+        currentTime:''
+      }
+    },
+    methods:{
+      back(){
+        this.setIsMini(true)
+      },
+      showNormal(){
+        this.setIsMini(false)
+      },
+      //上一首
+      prev(){
+        let index = this.playIndex -1
+        if (index < 0) {
+          index = this.playList.length -1
+        }
+        this.setPlayIndex(index)
+        this.setPlaying(true)
+      },
+      //下一首
+      next(){
+        if (this.playIndex === 0) {
+          this.$refs.audio.load()
+        }
+        let index = this.playIndex + 1
+        if (index > this.playList.length -1) {
+          index = 0
+        }
+        
+        
+        this.setPlayIndex(index)
+        this.setPlaying(true)
+      },
+      //暂停，播放切换
+      togglePlaying(){
+        let audio = this.$refs.audio
+        this.setPlaying(!this.playing)
+        if (this.playing) {
+          audio.play()
+        }else{
+          audio.pause()
+        }
+      },
+      updateTime(){
+        let audio  = this.$refs.audio
+        this.currentTime = audio.currentTime
+      },
+      //改变播放模式
+      changeMode(){
+        this.setMode((this.mode+1)%3)
+      },
+      //grogress移动结束后改变播放时间
+      changeCurrentTime(percent){
+        // console.log(time);
+        let time =  this.playSong.duration * percent
+        this.$refs.audio.currentTime = time
+      },
+      loaded(){
+        // this.$refs.audio.play()
+         
+      },
+      
+      //处理时间格式
+      format(time){
+         time = time || 0
+        let min = time / 60 | 0
+        let sec = time % 60
+        return `${min}:${this._add0(sec)}`
+      },
+      _add0(num){
+        // console.log(num.toString());
+        num = num.toString().split('.')[0]
+        if (num.toString().length < 2) {
+          return `0${num}`
+        }else{
+          return num
+        }
+        
+      },
+      ...mapMutations({
+          setIsMini: 'set_isMini',
+          setPlaying:'set_playing',
+          setPlayIndex:'set_playIndex',
+          setMode: 'set_mode',
+          setPlayList: 'set_playList',
+          // setCurrentTime:'set_currentTime'
+         }),
+    },
+    computed:{
+      //歌曲的总时间
+      time (){
+        return this.playSong.duration
+      },
+      percentage(){
+        return this.currentTime / this.time
+      },
+      playIcon(){
+        return this.playing ? 'icon-pause' : 'icon-play'
+      },
+      miniIcon(){
+        return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+      },
+      iconMode(){
+        switch (this.mode) {
+          case playMode.sque:
+              return 'icon-sequence'
+          case playMode.loop:
+              return 'icon-loop'
+          case playMode.random:
+              return 'icon-random'
+          default:
+          return ''
+        }
+      },
+        ...mapState([
+            'isMini',
+            'playing',
+            'playList',
+            'squeList',
+            'playIndex',
+            'mode',
+        ]),
+        ...mapGetters([
+          'playSong'
+        ]),
+         
+    },
+    watch:{
+      //模式改变
+      mode(){
+        let audio = this.$refs.audio;
+        switch (this.mode) {
+          case playMode.random:
+          console.log('random');
+              this.setPlayList(random(this.squeList))
+              audio.loop = false
+              // audio.currentTime =2
+              break 
+          case playMode.loop:
+              audio.loop = true
+              break 
+          case playMode.sque:
+          console.log('sque');
+              this.setPlayList(this.squeList)
+              audio.loop = false
+              break
+          default:
+          // return ''
+        }
+      },
+      currentTime(){
+        // this.$refs.audio.currentTime = this.currentTime
+      }
+      // playSong(){
+       
+      // }
+    },
+    mounted(){
+      // this.$refs.audio.play()
+    },
+    components:{
+      progressBar
+    }
 }
 </script>
 
@@ -248,7 +477,7 @@ export default {
           color: $color-theme-d
         .icon-mini
           font-size: 32px
-          position: absolute
+          // position: absolute
           left: 0
           top: 0
 

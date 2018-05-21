@@ -7,6 +7,7 @@ import router from './router'
 import 'common/stylus/index.styl'
 import fastClick from 'fastclick'
 import VueLazyLoad from 'vue-lazyload'
+import store from './store'
 
 Vue.config.productionTip = false
 fastClick.attach(document.body)
@@ -19,6 +20,12 @@ Vue.use(VueLazyLoad, {
 new Vue({
   el: '#app',
   router,
+  store,
   components: { App },
   template: '<App/>'
 })
+
+// var video = document.getElementById('video');
+// window.onload = function () {
+//   video.play();
+// }
