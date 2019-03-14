@@ -14,7 +14,7 @@ export function getTopList() {
 }
 
 export function getList() {
-  const url = 'api/api/getDiscList'
+  const url = 'api/getDiscList'
 
   const data = Object.assign({}, CommonParams, {
     platform: 'yqq',
@@ -36,7 +36,7 @@ export function getList() {
 }
 
 export function getSongList(disstid) {
-  const url = 'api/api/getCdInfo'
+  const url = 'api/getCdInfo'
 
   const data = Object.assign({}, CommonParams, {
     disstid,

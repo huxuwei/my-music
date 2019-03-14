@@ -4,7 +4,7 @@ import { param,urlMid,comm } from "./songConfig";
 import axios from 'axios'
 
 export function getSongPlay(songlist) {
-    const url = 'api/api/getPurlUrl'
+    const url = 'api/getPurlUrl'
     // {
     //     songmid: ["0047MZMS4Rgs5q"],
     //         songtype: [0]
